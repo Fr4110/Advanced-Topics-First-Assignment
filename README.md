@@ -30,6 +30,7 @@ project_root/
 │           └── pets_1.sqlite
 ├── run_evaluation.py
 └── requirements.txt
+```
 
 ## Running the Evaluation
 To start the pipeline and generate the evaluation metrics, execute:
