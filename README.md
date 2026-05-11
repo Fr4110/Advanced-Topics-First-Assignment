@@ -19,6 +19,7 @@ Ensure the Ollama server is running locally on port 11434 before starting the sc
 ### 3. Dataset Configuration
 The script evaluates a curated subset of the Spider benchmark. You must place the Spider data in a "data" folder inside the project root, maintaining the following structure:
 
+```text
 project_root/
 ├── data/
 │   ├── dev.json
