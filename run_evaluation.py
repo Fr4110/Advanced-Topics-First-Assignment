@@ -2,17 +2,18 @@ import json
 import sqlite3
 import os
 import time
+import ast
 import re
 from openai import OpenAI
 
-# 1. Configurazione ollama
+# 1. Configurazione LLM
 client = OpenAI(
     base_url="http://localhost:11434/v1",
     api_key="ollama" 
 )
 NOME_MODELLO = "llama3" 
 
-# 2. Accesso al database e Schema Linking
+# 2. Accesso al Database e Estrazione Schema
 def get_db_connection(db_id):
     db_path = os.path.join("data", "database", db_id, f"{db_id}.sqlite")
     return sqlite3.connect(db_path)
@@ -51,7 +52,7 @@ def execute_query(db_id, query):
     except Exception as e:
         return None, str(e)
 
-# 3. Serializzazione e Tabelle Oracle
+# 3. Identificazione e Serializzazione Tabelle
 def get_oracle_tables(db_id, ground_truth_sql):
     conn = get_db_connection(db_id)
     cursor = conn.cursor()
@@ -60,7 +61,7 @@ def get_oracle_tables(db_id, ground_truth_sql):
     conn.close()
     
     sql_lower = ground_truth_sql.lower()
-    oracle_tables = [t for t in all_tables if re.search(rf'\b{t}\b', sql_lower)]
+    oracle_tables = [t for t in all_tables if re.search(rf'\b{re.escape(t)}\b', sql_lower)]
     return oracle_tables if oracle_tables else all_tables
 
 def serialize_tables(db_id, table_names):
@@ -96,10 +97,8 @@ def serialize_tables_csv(db_id, table_names):
     conn.close()
     return testo_tabelle
 
+# 4. Pipeline di Generazione (Text-to-SQL e Table QA)
 def safe_parse_json(clean_json):
-    if "'" in clean_json and '"' not in clean_json:
-        clean_json = clean_json.replace("'", '"')
-        
     try:
         data = json.loads(clean_json)
         if isinstance(data, list) and len(data) > 0 and not isinstance(data[0], list):
@@ -107,6 +106,15 @@ def safe_parse_json(clean_json):
         righe = len(data) if isinstance(data, list) else 0
         return data, False, righe
     except Exception:
+        try:
+            data = ast.literal_eval(clean_json)
+            if isinstance(data, list):
+                if len(data) > 0 and not isinstance(data[0], list):
+                    data = [[item] for item in data]
+                return data, False, len(data)
+        except Exception:
+            pass
+            
         matches = re.findall(r'\[\s*(?:"[^"]*"|\'[^\']*\'|[^\[\]])+?\s*\]', clean_json)
         recovered_data = []
         for m in matches:
@@ -130,6 +138,7 @@ def pipeline_text_to_sql(question, schema):
     match = re.search(r'\bSELECT\b', raw_text, re.IGNORECASE)
     if not match:
         return raw_text.replace("```sql", "").replace("```", "").strip()
+    
     text_to_parse = raw_text[match.start():]
     paren_count = 0
     in_single_quote = False
@@ -174,21 +183,22 @@ Tables:
 
 Question: {question}
 
-Respond by returning EXCLUSIVELY a two-dimensional JSON array (e.g. [['Name', 30]]). No textual introduction."""
-
+Respond by returning EXCLUSIVELY a two-dimensional JSON array (e.g. [["Name", 30]]). No textual introduction."""
     response = client.chat.completions.create(
         model=NOME_MODELLO, messages=[{"role": "user", "content": prompt}], temperature=0.0
     )
     raw_text = response.choices[0].message.content.strip()
     json_match = re.search(r'\[.*\]', raw_text, re.DOTALL)
     clean_json = json_match.group(0).strip() if json_match else raw_text.replace("```json", "").replace("```", "").strip()
+    
     data, is_truncated, recovered_rows = safe_parse_json(clean_json)
+    
     error_msg = None
     if is_truncated:
         error_msg = f"JSON troncato. Recuperate {recovered_rows} righe valide." if data else "JSON troncato e irrecuperabile."
     return data, clean_json, error_msg, is_truncated, recovered_rows
 
-# 5. Metriche
+# 5. Calcolo Metriche Qatch
 def calcola_qatch_metrics(gt_data, pred_data):
     if not gt_data and not pred_data:
         return {"cell_precision": 1.0, "cell_recall": 1.0, "tuple_cardinality": 1.0, "tuple_order": 1.0, "exact_match": 1.0}
@@ -203,7 +213,11 @@ def calcola_qatch_metrics(gt_data, pred_data):
     
     exact = 1.0 if gt_norm == pred_norm else 0.0
     cardinality = 1.0 if len(gt_norm) == len(pred_norm) else 0.0
-    order = 1.0 if (sorted(gt_norm) == sorted(pred_norm) and gt_norm == pred_norm) else 0.0
+    
+    # Tuple Order posizionale
+    lunghezza_max = max(len(gt_norm), len(pred_norm))
+    righe_in_posizione = sum(1 for i in range(min(len(gt_norm), len(pred_norm))) if gt_norm[i] == pred_norm[i])
+    order = round(righe_in_posizione / lunghezza_max, 2) if lunghezza_max > 0 else 0.0
 
     def flatten(table):
         return [str(c).strip().lower() for row in table for c in (row if isinstance(row, (list, tuple)) else [row])]
@@ -219,15 +233,17 @@ def calcola_qatch_metrics(gt_data, pred_data):
     
     prec = matches / len(pred_cells) if pred_cells else 0.0
     rec = matches / len(gt_cells) if gt_cells else 0.0
+    
     return {
         "cell_precision": round(prec, 2), "cell_recall": round(rec, 2),
         "tuple_cardinality": cardinality, "tuple_order": order, "exact_match": exact
     }
 
-# 6. Valutazione
+# 6. Esecuzione Valutazione Principale
 def run_evaluation():
     with open("data/dev.json", "r", encoding="utf-8") as f:
         dataset = json.load(f)
+        
     database_scelti = ["concert_singer", "pets_1"]
     test_set = [sample for sample in dataset if sample["db_id"] in database_scelti]
     results = []
@@ -239,20 +255,20 @@ def run_evaluation():
         gt_data, _ = execute_query(db_id, gt_sql)
         oracle_tabs = get_oracle_tables(db_id, gt_sql)
 
-        # SQL
+        # SQL Pipeline
         start = time.time()
         sql_gen = pipeline_text_to_sql(question, get_schema(db_id, oracle_tabs))
         res_sql, err_sql = execute_query(db_id, sql_gen)
         m_sql = calcola_qatch_metrics(gt_data, res_sql)
         time_sql = round(time.time() - start, 2)
 
-        # Markdown
+        # Markdown Table QA Pipeline
         start = time.time()
         res_qa_md, raw_qa_md, err_qa_md, is_trunc_md, rec_rows_md = pipeline_table_qa(question, serialize_tables(db_id, oracle_tabs))
         m_qa_md = calcola_qatch_metrics(gt_data, res_qa_md) if res_qa_md else empty_metrics.copy()
         time_qa_md = round(time.time() - start, 2)
         
-        # CSV
+        # CSV Table QA Pipeline
         start = time.time()
         res_qa_csv, raw_qa_csv, err_qa_csv, is_trunc_csv, rec_rows_csv = pipeline_table_qa(question, serialize_tables_csv(db_id, oracle_tabs))
         m_qa_csv = calcola_qatch_metrics(gt_data, res_qa_csv) if res_qa_csv else empty_metrics.copy()
