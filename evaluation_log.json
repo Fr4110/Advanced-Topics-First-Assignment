@@ -803,7 +803,7 @@
                 "cell_precision": 1.0,
                 "cell_recall": 1.0,
                 "tuple_cardinality": 0.0,
-                "tuple_order": 0.0,
+                "tuple_order": 0.33,
                 "exact_match": 0.0
             },
             "time_seconds": 4.29
@@ -878,7 +878,7 @@
                 "cell_precision": 1.0,
                 "cell_recall": 1.0,
                 "tuple_cardinality": 0.0,
-                "tuple_order": 0.0,
+                "tuple_order": 0.33,
                 "exact_match": 0.0
             },
             "time_seconds": 4.28
@@ -1239,7 +1239,7 @@
                 "cell_precision": 0.75,
                 "cell_recall": 1.0,
                 "tuple_cardinality": 0.0,
-                "tuple_order": 0.0,
+                "tuple_order": 0.33,
                 "exact_match": 0.0
             },
             "time_seconds": 3.85
@@ -1746,7 +1746,7 @@
                 "cell_precision": 1.0,
                 "cell_recall": 1.0,
                 "tuple_cardinality": 1.0,
-                "tuple_order": 0.0,
+                "tuple_order": 0.2,
                 "exact_match": 0.0
             },
             "error": null,
@@ -2484,7 +2484,7 @@
                 "cell_precision": 1.0,
                 "cell_recall": 1.0,
                 "tuple_cardinality": 1.0,
-                "tuple_order": 0.0,
+                "tuple_order": 0.33,
                 "exact_match": 0.0
             },
             "error": null,
@@ -2618,7 +2618,7 @@
                 "cell_precision": 1.0,
                 "cell_recall": 1.0,
                 "tuple_cardinality": 1.0,
-                "tuple_order": 0.0,
+                "tuple_order": 0.33,
                 "exact_match": 0.0
             },
             "error": null,
@@ -2728,7 +2728,7 @@
                 "cell_precision": 1.0,
                 "cell_recall": 1.0,
                 "tuple_cardinality": 1.0,
-                "tuple_order": 0.0,
+                "tuple_order": 0.33,
                 "exact_match": 0.0
             },
             "error": null,
@@ -2935,7 +2935,7 @@
                 "cell_precision": 1.0,
                 "cell_recall": 1.0,
                 "tuple_cardinality": 1.0,
-                "tuple_order": 0.0,
+                "tuple_order": 0.33,
                 "exact_match": 0.0
             },
             "error": null,
@@ -3084,7 +3084,7 @@
                 "cell_precision": 1.0,
                 "cell_recall": 1.0,
                 "tuple_cardinality": 1.0,
-                "tuple_order": 0.0,
+                "tuple_order": 0.6,
                 "exact_match": 0.0
             },
             "error": null,
@@ -3219,7 +3219,7 @@
                 "cell_precision": 1.0,
                 "cell_recall": 1.0,
                 "tuple_cardinality": 1.0,
-                "tuple_order": 0.0,
+                "tuple_order": 0.6,
                 "exact_match": 0.0
             },
             "error": null,
@@ -4616,7 +4616,7 @@
                 "cell_precision": 0.67,
                 "cell_recall": 1.0,
                 "tuple_cardinality": 0.0,
-                "tuple_order": 0.0,
+                "tuple_order": 0.67,
                 "exact_match": 0.0
             },
             "time_seconds": 12.01
@@ -4637,7 +4637,7 @@
                 "cell_precision": 0.67,
                 "cell_recall": 1.0,
                 "tuple_cardinality": 0.0,
-                "tuple_order": 0.0,
+                "tuple_order": 0.67,
                 "exact_match": 0.0
             },
             "time_seconds": 9.45
@@ -6082,7 +6082,7 @@
                 "cell_precision": 0.33,
                 "cell_recall": 0.5,
                 "tuple_cardinality": 0.0,
-                "tuple_order": 0.0,
+                "tuple_order": 0.33,
                 "exact_match": 0.0
             },
             "time_seconds": 15.13
@@ -6903,7 +6903,7 @@
                 "cell_precision": 0.2,
                 "cell_recall": 1.0,
                 "tuple_cardinality": 0.0,
-                "tuple_order": 0.0,
+                "tuple_order": 0.2,
                 "exact_match": 0.0
             },
             "time_seconds": 16.5
@@ -6955,7 +6955,7 @@
                 "cell_precision": 0.2,
                 "cell_recall": 1.0,
                 "tuple_cardinality": 0.0,
-                "tuple_order": 0.0,
+                "tuple_order": 0.2,
                 "exact_match": 0.0
             },
             "time_seconds": 13.78
@@ -7036,7 +7036,7 @@
                 "cell_precision": 0.25,
                 "cell_recall": 1.0,
                 "tuple_cardinality": 0.0,
-                "tuple_order": 0.0,
+                "tuple_order": 0.25,
                 "exact_match": 0.0
             },
             "time_seconds": 15.34
@@ -7084,7 +7084,7 @@
                 "cell_precision": 0.22,
                 "cell_recall": 1.0,
                 "tuple_cardinality": 0.0,
-                "tuple_order": 0.0,
+                "tuple_order": 0.22,
                 "exact_match": 0.0
             },
             "time_seconds": 13.22
